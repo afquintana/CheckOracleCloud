@@ -24,6 +24,7 @@ class CapacityResult:
     availability_domain: str
     status: str
     available_count: int | None
+    timestamp_utc: datetime
     diagnostic: str
 
 
@@ -99,7 +100,8 @@ def list_region_ads(identity_client: oci.identity.IdentityClient, tenancy_ocid: 
 def _status_line(result: CapacityResult) -> str:
     return (
         f"region={result.region} | ad={result.availability_domain} | status={result.status} "
-        f"| available_count={result.available_count} | diagnostic={result.diagnostic}"
+        f"| available_count={result.available_count} | timestamp={result.timestamp_utc.isoformat()} "
+        f"| diagnostic={result.diagnostic}"
     )
 
 
@@ -123,6 +125,7 @@ def scan_region(
     base_config: dict,
     tenancy_ocid: str,
     region: str,
+    run_timestamp_utc: datetime,
 ) -> list[CapacityResult]:
     region_config = dict(base_config)
     region_config["region"] = region
@@ -163,6 +166,7 @@ def scan_region(
                     availability_domain=ad_name,
                     status=status,
                     available_count=available_count,
+                    timestamp_utc=run_timestamp_utc,
                     diagnostic=diagnostic,
                 )
                 results.append(result)
@@ -177,6 +181,7 @@ def scan_region(
                 availability_domain=ad_name,
                 status="ERROR",
                 available_count=None,
+                timestamp_utc=run_timestamp_utc,
                 diagnostic=diagnostic,
             )
             results.append(result)
@@ -192,6 +197,7 @@ def scan_region(
                 availability_domain=ad_name,
                 status="ERROR",
                 available_count=None,
+                timestamp_utc=run_timestamp_utc,
                 diagnostic=f"{type(exc).__name__}: {exc}",
             )
             results.append(result)
@@ -215,12 +221,13 @@ def has_capacity_hit(result: CapacityResult) -> bool:
 
 
 def format_hits_table(results: Iterable[CapacityResult]) -> str:
-    header = "region | availability_domain | status | available_count"
+    header = "region | availability_domain | status | available_count | timestamp"
     sep = "-" * len(header)
     rows = [header, sep]
     for res in results:
         rows.append(
-            f"{res.region} | {res.availability_domain} | {res.status} | {res.available_count}"
+            f"{res.region} | {res.availability_domain} | {res.status} | "
+            f"{res.available_count} | {res.timestamp_utc.isoformat()}"
         )
     return "\n".join(rows)
 
@@ -251,7 +258,7 @@ def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], lis
 
         all_results: list[CapacityResult] = []
         for region in regions:
-            all_results.extend(scan_region(config, tenancy_ocid, region))
+            all_results.extend(scan_region(config, tenancy_ocid, region, context.timestamp_utc))
 
         hits = [res for res in all_results if has_capacity_hit(res)]
         return context, all_results, hits
