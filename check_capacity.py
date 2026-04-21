@@ -1,4 +1,5 @@
 import logging
+import json
 import os
 import smtplib
 import ssl
@@ -90,6 +91,29 @@ def get_realm_regions(identity_client: oci.identity.IdentityClient) -> list[str]
     if not region_names:
         raise RuntimeError("OCI no devolvió regiones para el realm actual.")
     return region_names
+
+
+def load_regions_from_catalog(catalog_path: str) -> list[str]:
+    with open(catalog_path, "r", encoding="utf-8") as catalog_file:
+        catalog = json.load(catalog_file)
+
+    realms = catalog.get("realms", {})
+    region_ids: list[str] = []
+
+    for entries in realms.values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            region_id = entry.get("region_identifier")
+            if region_id:
+                region_ids.append(region_id)
+
+    deduped_region_ids = sorted(set(region_ids))
+    if not deduped_region_ids:
+        raise RuntimeError(f"No se encontraron region_identifier en {catalog_path}.")
+    return deduped_region_ids
 
 
 def list_region_ads(identity_client: oci.identity.IdentityClient, tenancy_ocid: str) -> list[str]:
@@ -250,11 +274,21 @@ def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], lis
         tenancy_ocid = os.environ["OCI_TENANCY_OCID"]
         bootstrap_identity = oci.identity.IdentityClient(config)
 
-        regions = get_realm_regions(bootstrap_identity)
-        logging.info(
-            "Regiones detectadas en el realm actual: %s",
-            ", ".join(regions),
-        )
+        catalog_path = os.environ.get("OCI_REGIONS_JSON_PATH", "oci_public_regions.json")
+        if os.path.exists(catalog_path):
+            regions = load_regions_from_catalog(catalog_path)
+            logging.info(
+                "Regiones cargadas desde catálogo (%s): %s",
+                catalog_path,
+                ", ".join(regions),
+            )
+        else:
+            regions = get_realm_regions(bootstrap_identity)
+            logging.info(
+                "Catálogo no encontrado (%s). Se usa list_regions del realm actual: %s",
+                catalog_path,
+                ", ".join(regions),
+            )
 
         all_results: list[CapacityResult] = []
         for region in regions:
