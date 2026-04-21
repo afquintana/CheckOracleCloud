@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 import os
 import smtplib
 import ssl
@@ -34,6 +34,13 @@ class ScanContext:
     bootstrap_region: str
     timestamp_utc: datetime
     timestamp_madrid: datetime
+
+
+@dataclass
+class StackNotificationPlan:
+    should_send: bool
+    day_number: int | None
+    deployed_at: datetime | None
 
 
 def configure_logging() -> None:
@@ -260,7 +267,38 @@ def repo_name_from_env() -> str:
     return os.environ.get("GITHUB_REPOSITORY", "(desconocido)")
 
 
-def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], list[CapacityResult]]:
+def _normalize_ocid(value: str | None) -> str | None:
+    if not value:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
+def get_target_regions(bootstrap_identity: oci.identity.IdentityClient) -> list[str]:
+    specific_region = os.environ.get("OCI_TARGET_REGION")
+    if specific_region:
+        return [specific_region]
+
+    catalog_path = os.environ.get("OCI_REGIONS_JSON_PATH", "oci_public_regions.json")
+    if os.path.exists(catalog_path):
+        regions = load_regions_from_catalog(catalog_path)
+        logging.info(
+            "Regiones cargadas desde catálogo (%s): %s",
+            catalog_path,
+            ", ".join(regions),
+        )
+        return regions
+
+    regions = get_realm_regions(bootstrap_identity)
+    logging.info(
+        "Catálogo no encontrado (%s). Se usa list_regions del realm actual: %s",
+        catalog_path,
+        ", ".join(regions),
+    )
+    return regions
+
+
+def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], list[CapacityResult], dict]:
     private_key_pem = os.environ["OCI_PRIVATE_KEY_PEM"]
 
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as key_file:
@@ -273,29 +311,14 @@ def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], lis
 
         tenancy_ocid = os.environ["OCI_TENANCY_OCID"]
         bootstrap_identity = oci.identity.IdentityClient(config)
-
-        catalog_path = os.environ.get("OCI_REGIONS_JSON_PATH", "oci_public_regions.json")
-        if os.path.exists(catalog_path):
-            regions = load_regions_from_catalog(catalog_path)
-            logging.info(
-                "Regiones cargadas desde catálogo (%s): %s",
-                catalog_path,
-                ", ".join(regions),
-            )
-        else:
-            regions = get_realm_regions(bootstrap_identity)
-            logging.info(
-                "Catálogo no encontrado (%s). Se usa list_regions del realm actual: %s",
-                catalog_path,
-                ", ".join(regions),
-            )
+        regions = get_target_regions(bootstrap_identity)
 
         all_results: list[CapacityResult] = []
         for region in regions:
             all_results.extend(scan_region(config, tenancy_ocid, region, context.timestamp_utc))
 
         hits = [res for res in all_results if has_capacity_hit(res)]
-        return context, all_results, hits
+        return context, all_results, hits, config
     finally:
         try:
             os.remove(key_path)
@@ -322,9 +345,155 @@ def build_email_body(context: ScanContext, hits: list[CapacityResult]) -> str:
     return "\n".join(lines)
 
 
+def build_stack_success_email(context: ScanContext, stack_id: str, job_id: str) -> tuple[str, str]:
+    timestamp_utc = context.timestamp_utc.strftime("%Y-%m-%d %H:%M:%S %Z")
+    timestamp_madrid = context.timestamp_madrid.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    subject = "OCI Madrid 3: stack lanzado automáticamente"
+    body = "\n".join(
+        [
+            "Se detectó hueco en eu-madrid-3 y se lanzó el stack automáticamente.",
+            f"Stack OCID: {stack_id}",
+            f"Job OCID: {job_id}",
+            f"Timestamp UTC: {timestamp_utc}",
+            f"Timestamp Europe/Madrid: {timestamp_madrid}",
+        ]
+    )
+    return subject, body
+
+
+def _is_apply_job(job) -> bool:
+    operation = getattr(job, "operation", None)
+    if not operation:
+        return False
+    return str(operation).upper() == "APPLY"
+
+
+def _extract_deployed_at(job) -> datetime | None:
+    for attr in ("time_finished", "time_updated", "time_created"):
+        value = getattr(job, attr, None)
+        if isinstance(value, datetime):
+            if value.tzinfo is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+    return None
+
+
+def get_latest_successful_apply_job(
+    rm_client, stack_id: str, compartment_id: str | None = None
+):
+    try:
+        list_jobs_kwargs = {"stack_id": stack_id}
+        if compartment_id:
+            list_jobs_kwargs["compartment_id"] = compartment_id
+        response = rm_client.list_jobs(**list_jobs_kwargs)
+    except ServiceError as exc:
+        logging.warning(
+            "No se pudieron listar jobs del stack (code=%s, status=%s).",
+            getattr(exc, "code", "UNKNOWN"),
+            getattr(exc, "status", "UNKNOWN"),
+        )
+        return None
+    except TypeError as exc:
+        logging.warning(
+            "No se pudieron listar jobs del stack por parámetros incompletos: %s",
+            exc,
+        )
+        return None
+
+    succeeded_apply_jobs = [
+        job
+        for job in response.data
+        if _is_apply_job(job) and str(getattr(job, "lifecycle_state", "")).upper() == "SUCCEEDED"
+    ]
+    if not succeeded_apply_jobs:
+        return None
+
+    succeeded_apply_jobs.sort(
+        key=lambda job: _extract_deployed_at(job) or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
+    return succeeded_apply_jobs[0]
+
+
+def should_send_daily_stack_email(context: ScanContext, deployed_at: datetime) -> StackNotificationPlan:
+    deployed_madrid_date = deployed_at.astimezone(MADRID_TZ).date()
+    today_madrid = context.timestamp_madrid.date()
+    days_since = (today_madrid - deployed_madrid_date).days
+
+    if days_since < 0 or days_since > 2:
+        return StackNotificationPlan(False, None, deployed_at)
+
+    if context.timestamp_madrid.hour != 9 or context.timestamp_madrid.minute != 0:
+        return StackNotificationPlan(False, days_since + 1, deployed_at)
+
+    return StackNotificationPlan(True, days_since + 1, deployed_at)
+
+
+def build_stack_daily_email(plan: StackNotificationPlan, stack_id: str) -> tuple[str, str]:
+    deployed_at = plan.deployed_at.astimezone(MADRID_TZ).strftime("%Y-%m-%d %H:%M:%S %Z")
+    subject = f"Recordatorio stack OCI (día {plan.day_number}/3)"
+    body = "\n".join(
+        [
+            "Tu stack ya está subido automáticamente en OCI Madrid 3.",
+            f"Stack OCID: {stack_id}",
+            f"Fecha de despliegue (Europe/Madrid): {deployed_at}",
+            f"Este es el aviso del día {plan.day_number} de 3.",
+        ]
+    )
+    return subject, body
+
+
+def maybe_launch_stack(context: ScanContext, config: dict, hits: list[CapacityResult]) -> None:
+    stack_id = _normalize_ocid(os.environ.get("OCI_STACK_ID"))
+    compartment_id = _normalize_ocid(os.environ.get("OCI_STACK_COMPARTMENT_OCID"))
+
+    if not stack_id:
+        logging.info(
+            "OCI_STACK_ID no definido. Solo se notificará capacidad."
+        )
+        return
+
+    rm_client = oci.resource_manager.ResourceManagerClient(config)
+    latest_success = get_latest_successful_apply_job(rm_client, stack_id, compartment_id)
+
+    if latest_success is not None:
+        deployed_at = _extract_deployed_at(latest_success)
+        if not deployed_at:
+            logging.info("El stack ya tiene APPLY exitoso, pero sin timestamp disponible.")
+            return
+
+        plan = should_send_daily_stack_email(context, deployed_at)
+        if plan.should_send:
+            subject, body = build_stack_daily_email(plan, stack_id)
+            send_email(subject, body)
+            logging.info("Email diario de stack enviado (día %s/3).", plan.day_number)
+        else:
+            logging.info("No toca email diario en esta ejecución.")
+        return
+
+    if not hits:
+        logging.info("Sin hueco detectado en Madrid3. No se lanza el stack.")
+        return
+
+    details = oci.resource_manager.models.CreateJobDetails(
+        stack_id=stack_id,
+        display_name=f"auto-apply-madrid3-{context.timestamp_utc.strftime('%Y%m%d%H%M%S')}",
+        operation_details=oci.resource_manager.models.CreateApplyJobOperationDetails(
+            execution_plan_strategy="AUTO_APPROVED"
+        ),
+    )
+    response = rm_client.create_job(details)
+    job_id = response.data.id
+
+    subject, body = build_stack_success_email(context, stack_id, job_id)
+    send_email(subject, body)
+    logging.info("Stack lanzado automáticamente. Job=%s", job_id)
+
+
 def main() -> None:
     configure_logging()
-    context, all_results, hits = check_capacity_all_regions()
+    context, all_results, hits, config = check_capacity_all_regions()
 
     logging.info("Escaneo completado. Resultados=%s | Hits=%s", len(all_results), len(hits))
 
@@ -335,6 +504,8 @@ def main() -> None:
         logging.info("Se envió un único email resumen para esta ejecución.")
     else:
         logging.info("No se encontraron hits de capacidad disponible.")
+
+    maybe_launch_stack(context, config, hits)
 
 
 if __name__ == "__main__":
