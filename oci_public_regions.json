@@ -1,0 +1,486 @@
+{
+  "generated_at": "2026-04-21",
+  "scope": "All publicly documented OCI regions found in official Oracle documentation",
+  "notes": {
+    "availability_domain_names": "Tenancy-specific; use OCI IAM ListAvailabilityDomains to get exact AD names for your tenancy",
+    "fault_domains_per_availability_domain": 3,
+    "non_publicly_enumerable_regions": [
+      "Dedicated Regions",
+      "Alloy partner regions"
+    ],
+    "non_public_reason": "Oracle states that region-specific details such as region ID and region key are not available in public documentation for dedicated regions"
+  },
+  "counts": {
+    "commercial_public": 45,
+    "eu_sovereign_cloud": 2,
+    "uk_sovereign_cloud": 2,
+    "us_government_cloud": 2,
+    "us_defense_cloud": 3,
+    "australia_government_and_defence": 1,
+    "total_publicly_documented_regions": 55
+  },
+  "realms": {
+    "commercial_public": [
+      {
+        "realm_key": "OC1",
+        "region_name": "Australia East (Sydney)",
+        "region_identifier": "ap-sydney-1",
+        "location": "Sydney, Australia",
+        "region_key": "SYD",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Australia Southeast (Melbourne)",
+        "region_identifier": "ap-melbourne-1",
+        "location": "Melbourne, Australia",
+        "region_key": "MEL",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Brazil East (Sao Paulo)",
+        "region_identifier": "sa-saopaulo-1",
+        "location": "Sao Paulo, Brazil",
+        "region_key": "GRU",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Brazil Southeast (Vinhedo)",
+        "region_identifier": "sa-vinhedo-1",
+        "location": "Vinhedo, Brazil",
+        "region_key": "VCP",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Canada Southeast (Montreal)",
+        "region_identifier": "ca-montreal-1",
+        "location": "Montreal, Canada",
+        "region_key": "YUL",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Canada Southeast (Toronto)",
+        "region_identifier": "ca-toronto-1",
+        "location": "Toronto, Canada",
+        "region_key": "YYZ",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Chile Central (Santiago)",
+        "region_identifier": "sa-santiago-1",
+        "location": "Santiago, Chile",
+        "region_key": "SCL",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Chile West (Valparaiso)",
+        "region_identifier": "sa-valparaiso-1",
+        "location": "Valparaiso, Chile",
+        "region_key": "VAP",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Colombia Central (Bogota)",
+        "region_identifier": "sa-bogota-1",
+        "location": "Bogota, Colombia",
+        "region_key": "BOG",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "France Central (Paris)",
+        "region_identifier": "eu-paris-1",
+        "location": "Paris, France",
+        "region_key": "CDG",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "France South (Marseille)",
+        "region_identifier": "eu-marseille-1",
+        "location": "Marseille, France",
+        "region_key": "MRS",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Germany Central (Frankfurt)",
+        "region_identifier": "eu-frankfurt-1",
+        "location": "Frankfurt, Germany",
+        "region_key": "FRA",
+        "availability_domains": 3
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "India South (Hyderabad)",
+        "region_identifier": "ap-hyderabad-1",
+        "location": "Hyderabad, India",
+        "region_key": "HYD",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "India West (Mumbai)",
+        "region_identifier": "ap-mumbai-1",
+        "location": "Mumbai, India",
+        "region_key": "BOM",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Indonesia North (Batam)",
+        "region_identifier": "ap-batam-1",
+        "location": "Batam, Indonesia",
+        "region_key": "HSG",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Israel Central (Jerusalem)",
+        "region_identifier": "il-jerusalem-1",
+        "location": "Jerusalem, Israel",
+        "region_key": "MTZ",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Italy Northwest (Milan)",
+        "region_identifier": "eu-milan-1",
+        "location": "Milan, Italy",
+        "region_key": "LIN",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Italy North (Turin)",
+        "region_identifier": "eu-turin-1",
+        "location": "Turin, Italy",
+        "region_key": "NRQ",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Japan Central (Osaka)",
+        "region_identifier": "ap-osaka-1",
+        "location": "Osaka, Japan",
+        "region_key": "KIX",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Japan East (Tokyo)",
+        "region_identifier": "ap-tokyo-1",
+        "location": "Tokyo, Japan",
+        "region_key": "NRT",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Malaysia West 2 (Kulai)",
+        "region_identifier": "ap-kulai-2",
+        "location": "Kulai, Malaya",
+        "region_key": "JBP",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Mexico Central (Queretaro)",
+        "region_identifier": "mx-queretaro-1",
+        "location": "Queretaro, Mexico",
+        "region_key": "QRO",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Mexico Northeast (Monterrey)",
+        "region_identifier": "mx-monterrey-1",
+        "location": "Monterrey, Mexico",
+        "region_key": "MTY",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Morocco West (Casablanca)",
+        "region_identifier": "af-casablanca-1",
+        "location": "Casablanca, Morocco",
+        "region_key": "LEJ",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Netherlands Northwest (Amsterdam)",
+        "region_identifier": "eu-amsterdam-1",
+        "location": "Amsterdam, Netherlands",
+        "region_key": "AMS",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Saudi Arabia Central (Riyadh)",
+        "region_identifier": "me-riyadh-1",
+        "location": "Riyadh, Saudi Arabia",
+        "region_key": "RUH",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Saudi Arabia West (Jeddah)",
+        "region_identifier": "me-jeddah-1",
+        "location": "Jeddah, Saudi Arabia",
+        "region_key": "JED",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC20",
+        "region_name": "Serbia Central (Jovanovac)",
+        "region_identifier": "eu-jovanovac-1",
+        "location": "Jovanovac, Serbia",
+        "region_key": "BEG",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Singapore (Singapore)",
+        "region_identifier": "ap-singapore-1",
+        "location": "Singapore, Singapore",
+        "region_key": "SIN",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Singapore West (Singapore)",
+        "region_identifier": "ap-singapore-2",
+        "location": "Singapore, Singapore",
+        "region_key": "XSP",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "South Africa Central (Johannesburg)",
+        "region_identifier": "af-johannesburg-1",
+        "location": "Johannesburg, South Africa",
+        "region_key": "JNB",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "South Korea Central (Seoul)",
+        "region_identifier": "ap-seoul-1",
+        "location": "Seoul, South Korea",
+        "region_key": "ICN",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "South Korea North (Chuncheon)",
+        "region_identifier": "ap-chuncheon-1",
+        "location": "Chuncheon, South Korea",
+        "region_key": "YNY",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Spain Central (Madrid)",
+        "region_identifier": "eu-madrid-1",
+        "location": "Madrid, Spain",
+        "region_key": "MAD",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Spain Central (Madrid 3)",
+        "region_identifier": "eu-madrid-3",
+        "location": "Madrid, Spain",
+        "region_key": "ORF",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Sweden Central (Stockholm)",
+        "region_identifier": "eu-stockholm-1",
+        "location": "Stockholm, Sweden",
+        "region_key": "ARN",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "Switzerland North (Zurich)",
+        "region_identifier": "eu-zurich-1",
+        "location": "Zurich, Switzerland",
+        "region_key": "ZRH",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "UAE Central (Abu Dhabi)",
+        "region_identifier": "me-abudhabi-1",
+        "location": "Abu Dhabi, UAE",
+        "region_key": "AUH",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "UAE East (Dubai)",
+        "region_identifier": "me-dubai-1",
+        "location": "Dubai, UAE",
+        "region_key": "DXB",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "UK South (London)",
+        "region_identifier": "uk-london-1",
+        "location": "London, United Kingdom",
+        "region_key": "LHR",
+        "availability_domains": 3
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "UK West (Newport)",
+        "region_identifier": "uk-cardiff-1",
+        "location": "Newport, United Kingdom",
+        "region_key": "CWL",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "US East (Ashburn)",
+        "region_identifier": "us-ashburn-1",
+        "location": "Ashburn, VA",
+        "region_key": "IAD",
+        "availability_domains": 3
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "US Midwest (Chicago)",
+        "region_identifier": "us-chicago-1",
+        "location": "Chicago, IL",
+        "region_key": "ORD",
+        "availability_domains": 3
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "US West (Phoenix)",
+        "region_identifier": "us-phoenix-1",
+        "location": "Phoenix, AZ",
+        "region_key": "PHX",
+        "availability_domains": 3
+      },
+      {
+        "realm_key": "OC1",
+        "region_name": "US West (San Jose)",
+        "region_identifier": "us-sanjose-1",
+        "location": "San Jose, CA",
+        "region_key": "SJC",
+        "availability_domains": 1
+      }
+    ],
+    "eu_sovereign_cloud": [
+      {
+        "realm_key": "OC19",
+        "region_name": "EU Sovereign Central (Frankfurt)",
+        "region_identifier": "eu-frankfurt-2",
+        "location": "Frankfurt, Germany",
+        "region_key": "STR",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC19",
+        "region_name": "EU Sovereign South (Madrid)",
+        "region_identifier": "eu-madrid-2",
+        "location": "Madrid, Spain",
+        "region_key": "VLL",
+        "availability_domains": 1
+      }
+    ],
+    "uk_sovereign_cloud": [
+      {
+        "realm_key": "OC4",
+        "region_name": "UK Gov South (London)",
+        "region_identifier": "uk-gov-london-1",
+        "location": "London, United Kingdom",
+        "region_key": "LTN",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC4",
+        "region_name": "UK Gov West (Newport)",
+        "region_identifier": "uk-gov-cardiff-1",
+        "location": "Newport, United Kingdom",
+        "region_key": "BRS",
+        "availability_domains": 1
+      }
+    ],
+    "us_government_cloud": [
+      {
+        "realm_key": "OC2",
+        "region_name": "US Gov East (Ashburn)",
+        "region_identifier": "us-langley-1",
+        "location": "Ashburn, VA",
+        "region_key": "LFI",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC2",
+        "region_name": "US Gov West (Phoenix)",
+        "region_identifier": "us-luke-1",
+        "location": "Phoenix, AZ",
+        "region_key": "LUF",
+        "availability_domains": 1
+      }
+    ],
+    "us_defense_cloud": [
+      {
+        "realm_key": "OC3",
+        "region_name": "US DoD East (Ashburn)",
+        "region_identifier": "us-gov-ashburn-1",
+        "location": "Ashburn, VA",
+        "region_key": "RIC",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC3",
+        "region_name": "US DoD North (Chicago)",
+        "region_identifier": "us-gov-chicago-1",
+        "location": "Chicago, IL",
+        "region_key": "PIA",
+        "availability_domains": 1
+      },
+      {
+        "realm_key": "OC3",
+        "region_name": "US DoD West (Phoenix)",
+        "region_identifier": "us-gov-phoenix-1",
+        "location": "Phoenix, AZ",
+        "region_key": "TUS",
+        "availability_domains": 1
+      }
+    ],
+    "australia_government_and_defence": [
+      {
+        "realm_key": "OC10",
+        "region_name": "Australia Dedicated Region (Canberra)",
+        "region_identifier": "ap-dcc-canberra-1",
+        "location": "Canberra, Australia",
+        "region_key": "WGA",
+        "availability_domains": 1
+      }
+    ],
+    "not_publicly_enumerable": [
+      {
+        "category": "Dedicated Regions",
+        "public_region_ids_available": false
+      },
+      {
+        "category": "Oracle Alloy partner regions",
+        "public_region_ids_available": false
+      }
+    ]
+  }
+}
