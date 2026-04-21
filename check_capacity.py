@@ -316,7 +316,7 @@ def get_target_regions(bootstrap_identity: oci.identity.IdentityClient) -> list[
     return regions
 
 
-def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], list[CapacityResult], dict]:
+def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], list[CapacityResult], dict, str]:
     private_key_pem = _get_required_env("OCI_PRIVATE_KEY_PEM")
     private_key_pem = private_key_pem.replace("\\n", "\n")
 
@@ -324,25 +324,19 @@ def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], lis
         key_file.write(private_key_pem)
         key_path = key_file.name
 
-    try:
-        config = build_oci_config(key_path)
-        context = now_context(config["region"])
+    config = build_oci_config(key_path)
+    context = now_context(config["region"])
 
-        tenancy_ocid = _get_required_env("OCI_TENANCY_OCID")
-        bootstrap_identity = oci.identity.IdentityClient(config)
-        regions = get_target_regions(bootstrap_identity)
+    tenancy_ocid = _get_required_env("OCI_TENANCY_OCID")
+    bootstrap_identity = oci.identity.IdentityClient(config)
+    regions = get_target_regions(bootstrap_identity)
 
-        all_results: list[CapacityResult] = []
-        for region in regions:
-            all_results.extend(scan_region(config, tenancy_ocid, region, context.timestamp_utc))
+    all_results: list[CapacityResult] = []
+    for region in regions:
+        all_results.extend(scan_region(config, tenancy_ocid, region, context.timestamp_utc))
 
-        hits = [res for res in all_results if has_capacity_hit(res)]
-        return context, all_results, hits, config
-    finally:
-        try:
-            os.remove(key_path)
-        except OSError:
-            pass
+    hits = [res for res in all_results if has_capacity_hit(res)]
+    return context, all_results, hits, config, key_path
 
 
 def build_email_body(context: ScanContext, hits: list[CapacityResult]) -> str:
@@ -512,19 +506,25 @@ def maybe_launch_stack(context: ScanContext, config: dict, hits: list[CapacityRe
 
 def main() -> None:
     configure_logging()
-    context, all_results, hits, config = check_capacity_all_regions()
+    context, all_results, hits, config, key_path = check_capacity_all_regions()
 
-    logging.info("Escaneo completado. Resultados=%s | Hits=%s", len(all_results), len(hits))
+    try:
+        logging.info("Escaneo completado. Resultados=%s | Hits=%s", len(all_results), len(hits))
 
-    if hits:
-        subject = f"OCI capacidad disponible: {len(hits)} hit(s)"
-        body = build_email_body(context, hits)
-        send_email(subject, body)
-        logging.info("Se envió un único email resumen para esta ejecución.")
-    else:
-        logging.info("No se encontraron hits de capacidad disponible.")
+        if hits:
+            subject = f"OCI capacidad disponible: {len(hits)} hit(s)"
+            body = build_email_body(context, hits)
+            send_email(subject, body)
+            logging.info("Se envió un único email resumen para esta ejecución.")
+        else:
+            logging.info("No se encontraron hits de capacidad disponible.")
 
-    maybe_launch_stack(context, config, hits)
+        maybe_launch_stack(context, config, hits)
+    finally:
+        try:
+            os.remove(key_path)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":
