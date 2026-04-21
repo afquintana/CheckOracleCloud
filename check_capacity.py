@@ -75,11 +75,11 @@ def send_email(subject: str, body: str) -> None:
 
 def build_oci_config(private_key_path: str) -> dict:
     return {
-        "user": os.environ["OCI_USER_OCID"],
-        "tenancy": os.environ["OCI_TENANCY_OCID"],
-        "fingerprint": os.environ["OCI_FINGERPRINT"],
+        "user": _get_required_env("OCI_USER_OCID"),
+        "tenancy": _get_required_env("OCI_TENANCY_OCID"),
+        "fingerprint": _get_required_env("OCI_FINGERPRINT"),
         "key_file": private_key_path,
-        "region": os.environ.get("OCI_REGION", "eu-madrid-3"),
+        "region": _clean_env_value(os.environ.get("OCI_REGION", "eu-madrid-3")),
     }
 
 
@@ -274,8 +274,26 @@ def _normalize_ocid(value: str | None) -> str | None:
     return stripped or None
 
 
+def _clean_env_value(value: str) -> str:
+    cleaned = value.strip()
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in {"'", '"'}:
+        cleaned = cleaned[1:-1].strip()
+    return cleaned
+
+
+def _get_required_env(name: str) -> str:
+    value = os.environ.get(name)
+    if value is None:
+        raise KeyError(name)
+
+    cleaned = _clean_env_value(value)
+    if not cleaned:
+        raise ValueError(f"La variable de entorno {name} está vacía.")
+    return cleaned
+
+
 def get_target_regions(bootstrap_identity: oci.identity.IdentityClient) -> list[str]:
-    specific_region = os.environ.get("OCI_TARGET_REGION")
+    specific_region = _clean_env_value(os.environ.get("OCI_TARGET_REGION", ""))
     if specific_region:
         return [specific_region]
 
@@ -299,7 +317,8 @@ def get_target_regions(bootstrap_identity: oci.identity.IdentityClient) -> list[
 
 
 def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], list[CapacityResult], dict]:
-    private_key_pem = os.environ["OCI_PRIVATE_KEY_PEM"]
+    private_key_pem = _get_required_env("OCI_PRIVATE_KEY_PEM")
+    private_key_pem = private_key_pem.replace("\\n", "\n")
 
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as key_file:
         key_file.write(private_key_pem)
@@ -309,7 +328,7 @@ def check_capacity_all_regions() -> tuple[ScanContext, list[CapacityResult], lis
         config = build_oci_config(key_path)
         context = now_context(config["region"])
 
-        tenancy_ocid = os.environ["OCI_TENANCY_OCID"]
+        tenancy_ocid = _get_required_env("OCI_TENANCY_OCID")
         bootstrap_identity = oci.identity.IdentityClient(config)
         regions = get_target_regions(bootstrap_identity)
 
